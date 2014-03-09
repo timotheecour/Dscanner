@@ -3,6 +3,7 @@ module analysis.base;
 import std.container;
 import std.string;
 import stdx.d.ast;
+import stdx.d.lexer;
 import std.array;
 
 struct Message
@@ -14,7 +15,7 @@ struct Message
 	bool isError = false;
 }
 
-alias MessageSet = RedBlackTree!(Message, "a.line < b.line");
+alias MessageSet = RedBlackTree!(Message, "a.line < b.line", true);
 
 abstract class BaseAnalyzer : ASTVisitor
 {
@@ -24,6 +25,8 @@ public:
 		this.fileName = fileName;
 		_messages = new MessageSet;
 	}
+
+	void analyze(const(Token)[] tokens) {}
 
 	Message[] messages()
 	{
@@ -43,8 +46,6 @@ protected:
 			inAggregate = false;
 		}
 	}
-
-	import core.vararg;
 
 	void addErrorMessage(size_t line, size_t column, string message)
 	{

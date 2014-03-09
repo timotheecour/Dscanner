@@ -18,15 +18,17 @@ import stdx.d.parser;
 import stdx.d.ast;
 
 import analysis.base;
-import analysis.style;
-import analysis.enumarrayliteral;
-import analysis.pokemon;
 import analysis.del;
+import analysis.enumarrayliteral;
 import analysis.fish;
+import analysis.linelength;
 import analysis.numbers;
 import analysis.objectconst;
-import analysis.range;
 import analysis.output;
+import analysis.pokemon;
+import analysis.range;
+import analysis.style;
+import analysis.tabcharacters;
 
 void syntaxCheck(File output, string[] fileNames, shared(StringCache)* cache)
 {
@@ -102,10 +104,13 @@ MessageSet[string] analyze(string[] fileNames, shared(StringCache)* cache,
 		checks ~= new NumberStyleCheck(fileName);
 		checks ~= new ObjectConstCheck(fileName);
 		checks ~= new BackwardsRangeCheck(fileName);
+		checks ~= new LineLengthCheck(fileName);
+//		checks ~= new TabCharacterCheck(fileName);
 
 		foreach (check; checks)
 		{
 			check.visit(m);
+			check.analyze(app.data);
 		}
 
 		foreach(check; checks)
