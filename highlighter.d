@@ -74,7 +74,13 @@ void highlight(R)(ref R tokens, string fileName)
 void writeSpan(File file, string cssClass, string value)
 {
 	version(Windows)
-		file.write(`<span class="`, cssClass, `">`, value.replace("&", "&amp;").replace("<", "&lt;").replace("\r", ""), `</span>`);
+	{
+		file.write(`<span class="`, cssClass, `">`, value.replace("&", "&amp;")
+			.replace("<", "&lt;").replace("\r", ""), `</span>`);
+	}
 	else
-		file.write(`<span class="`, cssClass, `">`, value.replace("&", "&amp;").replace("<", "&lt;"), `</span>`);
+	{
+		file.write(`<span class="`, cssClass, `">`, value.replace("&", "&amp;")
+			.replace("<", "&lt;"), `</span>`);
+	}
 }

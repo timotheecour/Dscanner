@@ -521,7 +521,8 @@ mixin template Lexer(Token, alias defaultTokenFunction,
                 }
                 else
                 {
-                    code ~= "        if (range.peek(" ~ text(token.length - 1) ~ ") == \"" ~ escape(token) ~"\" && isSeparating(" ~ text(token.length) ~ "))\n";
+                    code ~= "        if (range.peek(" ~ text(token.length - 1) ~ ") == \"" ~ escape(token) ~"\" && isSeparating("
+                        ~ text(token.length) ~ "))\n";
                     code ~= "        {\n";
                     code ~= "            range.popFrontN(" ~ text(token.length) ~ ");\n";
                     code ~= "            return Token(_tok!\"" ~ escape(token) ~ "\", null, line, column, index);\n";
