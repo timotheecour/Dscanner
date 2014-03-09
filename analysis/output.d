@@ -18,17 +18,15 @@ void writeWhitespace(File file, string text, ref uint line, MessageSet messages,
 		{
 			if (spans.containsLine(line))
 				file.write("\n");
-			foreach (message; messages[].filter!(a => a.line == line - 1))
+			foreach (message; messages[].filter!(a => a.line == line))
 				writeMessage(file, message);
-			bool prevWasVisible = false;
+			line++;
 			if (spans.containsLine(line))
 			{
-				prevWasVisible = true;
 				file.writef("<span class=\"ln\">%d</span>", line);
+				if (!spans.containsLine(line + 1))
+					file.writeln("<div class=\"separator\"/></div>");
 			}
-			line++;
-			if (!spans.containsLine(line) && prevWasVisible)
-				file.writeln("<div class=\"separator\"/></div>");
 		}
 		else if (spans.containsLine(line))
 		{
@@ -43,24 +41,23 @@ void writeWhitespace(File file, string text, ref uint line, MessageSet messages,
 void writeStrOrCom(File file, string text, string cssClass, ref uint line,
 	ref const LineSpans spans)
 {
-	file.write("<span class=\"", cssClass, "\">");
+	bool writing = spans.containsLine(line);
+	if (writing)
+		file.write("<span class=\"", cssClass, "\">");
 	foreach (char c; text)
 	{
 		if (c == '\r')
 			continue;
 		else if (c == '\n')
 		{
-			bool prevWasVisible = false;
-			if (spans.containsLine(line))
-			{
-				prevWasVisible = true;
-				file.writef("\n</span><span class=\"ln\">%d</span><span class=\"%s\">", line, cssClass);
-			}
+			if (writing)
+				file.write("\n");
 			line++;
-			if (!spans.containsLine(line) && prevWasVisible)
-				file.writeln("<div class=\"separator\"/></div>");
+			writing = spans.containsLine(line);
+			if (writing)
+				file.writef("</span><span class=\"ln\">%d</span><span class=\"%s\">", line, cssClass);
 		}
-		else if (spans.containsLine(line))
+		else if (writing)
 		{
 			if (c == '<')
 				file.write("&lt;");
@@ -70,7 +67,8 @@ void writeStrOrCom(File file, string text, string cssClass, ref uint line,
 				file.write(c);
 		}
 	}
-	file.write("</span>");
+	if (writing)
+		file.write("</span>");
 }
 
 void writeToken(File file, ref const Token t, ref uint line, MessageSet messages,
@@ -99,7 +97,8 @@ void writeToken(File file, ref const Token t, ref uint line, MessageSet messages
 
 void writeMessage(File file, ref const Message message)
 {
-	file.write("<div class=\"warning\">");
+	file.writef("<div class=\"message %s\">",
+		message.isError ? "error" : "warning");
 	file.write(message.message);
 	file.writeln("</div>");
 }
@@ -144,9 +143,9 @@ void writeHtmlReport(File file, MessageSet[string] messages, shared(StringCache)
 		config.stringBehavior = StringBehavior.source;
 		const(Token)[] tokens = byToken(bytes, config, cache).array;
 		file.writeln("<div class=\"section\" name=\"", fileName, "\">");
-		file.writeln("<h1><a name=\"", fileName, "\">", fileName, "</a></h1>");
+		file.writeln("<h1><a name=\"", fileName, "\"></a>", fileName, "</h1>");
 		file.writeln("<pre>");
-		uint currentLine = 2;
+		uint currentLine = 1;
 		LineSpans ls = generateLineSpans(messageSet);
 		if (ls.containsLine(1))
 			file.write("<span class=\"ln\">1</span>");
@@ -206,21 +205,29 @@ immutable string STATIC_ANALYSIS_CSS = "
 	width: 5em;
 	display: inline-block;
 	margin-left: -4em;
-	border-right: .1em solid #839496;
+	border-right: .1em solid #073642;
 	margin-right: 1em;
 }
+
 .warning {
+	border-top: .5em solid #b58900;
+}
+
+.error {
+	border-top: .5em solid #dc322f;
+}
+
+.message {
 	display: block;
 	border-radius: 1em;
-	border-top: .1em solid ##dc322f;
-	color: #002b36;
-	background-color: #fdf6e3;
+	color: #fdf6e3;
+	background-color: #586e75;
 	padding: 1em;
 	margin: .5em 0 -.5em 0;
 }
 pre {
 	padding-left: 5em;
-	margin: 0;
+	margin: 0 1em 0 0;
 	border-radius: 0 0 1em 1em;
 }
 
@@ -233,12 +240,21 @@ pre {
 
 .section h1 {
     font-weight: normal;
-    color: #002b36;
-	background-color: #fdf6e3;
+    color: #fdf6e3;
+	background-color: #586e75;
     margin: 0;
     padding: .5em;
     border-radius: 1em 1em 0 0;
     font-size: medium;
+}
+
+.section table {
+	margin: 1em;
+	color: #839496;
+}
+
+.section a {
+	color: #839496;
 }
 
 .separator {
@@ -246,6 +262,12 @@ pre {
 	height: 1em;
 	margin: 0;
 	padding: 0;
-	border-bottom: .1em dashed #fdf6e3;
+	border-bottom: .1em dashed #839496;
+	margin-left: -4em;
 }
+
+html {
+	background-color: #002b36;
+}
+
 ";

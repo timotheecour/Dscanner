@@ -295,6 +295,12 @@ options:
     --recursive | -R | -r
         When used with --ctags, --tokenCount, or --sloc, dscanner will produce
         ctags output for all .d and .di files contained within the given
-        directories and its sub-directories.`,
+        directories and its sub-directories.
+
+    --report
+        Generates a report in HTML format containing the warnings produced by
+        the --styleCheck option. The report will be generated in the current
+        directory with the name "dscanner-analysis.html". Subsequent runs of
+        the program will overwrite existing reports.`,
         programName);
 }

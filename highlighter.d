@@ -13,7 +13,7 @@ import stdx.d.lexer;
 //immutable string SOLARIZED_CSS = "html { background-color: #fdf6e3; color: #002b36; }
 immutable string SOLARIZED_CSS = "pre { background-color: #002b36; color: #839496; }
 .kwrd { color: #b58900; font-weight: bold;  }
-.com  { color: #93a1a1; font-style: italic; }
+.com  { color: #586e75; font-style: italic; }
 .num  { color: #dc322f; font-weigth: bold;  }
 .str  { color: #2aa198; font-style: italic; }
 .op   { color: #586e75; font-weight: bold;  }
