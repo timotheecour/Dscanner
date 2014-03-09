@@ -10,6 +10,16 @@ import std.stdio;
 import std.array;
 import stdx.d.lexer;
 
+//immutable string SOLARIZED_CSS = "html { background-color: #fdf6e3; color: #002b36; }
+immutable string SOLARIZED_CSS = "pre { background-color: #002b36; color: #839496; }
+.kwrd { color: #b58900; font-weight: bold;  }
+.com  { color: #93a1a1; font-style: italic; }
+.num  { color: #dc322f; font-weigth: bold;  }
+.str  { color: #2aa198; font-style: italic; }
+.op   { color: #586e75; font-weight: bold;  }
+.type { color: #268bd2; font-weight: bold;  }
+.cons { color: #859900; font-weight: bold;  }";
+
 // http://ethanschoonover.com/solarized
 void highlight(R)(ref R tokens, string fileName)
 {
@@ -22,14 +32,9 @@ void highlight(R)(ref R tokens, string fileName)
 	stdout.writeln(q"[</head>
 <body>
 <style type="text/css">
-html  { background-color: #fdf6e3; color: #002b36; }
-.kwrd { color: #b58900; font-weight: bold;  }
-.com  { color: #93a1a1; font-style: italic; }
-.num  { color: #dc322f; font-weigth: bold;  }
-.str  { color: #2aa198; font-style: italic; }
-.op   { color: #586e75; font-weight: bold;  }
-.type { color: #268bd2; font-weight: bold;  }
-.cons { color: #859900; font-weight: bold;  }
+]");
+	stdout.writeln(SOLARIZED_CSS);
+	stdout.writeln(q"[
 </style>
 <pre>]");
 
@@ -38,17 +43,17 @@ html  { background-color: #fdf6e3; color: #002b36; }
 		auto t = tokens.front;
 		tokens.popFront();
 		if (isBasicType(t.type))
-			writeSpan("type", str(t.type));
+			stdout.writeSpan("type", str(t.type));
 		else if (isKeyword(t.type))
-			writeSpan("kwrd", str(t.type));
+			stdout.writeSpan("kwrd", str(t.type));
 		else if (t.type == tok!"comment")
-			writeSpan("com", t.text);
+			stdout.writeSpan("com", t.text);
 		else if (isStringLiteral(t.type) || t.type == tok!"characterLiteral")
-			writeSpan("str", t.text);
+			stdout.writeSpan("str", t.text);
 		else if (isNumberLiteral(t.type))
-			writeSpan("num", t.text);
+			stdout.writeSpan("num", t.text);
 		else if (isOperator(t.type))
-			writeSpan("op", str(t.type));
+			stdout.writeSpan("op", str(t.type));
 		else
 		{
 			version(Windows)
@@ -66,10 +71,10 @@ html  { background-color: #fdf6e3; color: #002b36; }
 	stdout.writeln("</pre>\n</body></html>");
 }
 
-void writeSpan(string cssClass, string value)
+void writeSpan(File file, string cssClass, string value)
 {
 	version(Windows)
-		stdout.write(`<span class="`, cssClass, `">`, value.replace("&", "&amp;").replace("<", "&lt;").replace("\r", ""), `</span>`);
+		file.write(`<span class="`, cssClass, `">`, value.replace("&", "&amp;").replace("<", "&lt;").replace("\r", ""), `</span>`);
 	else
-		stdout.write(`<span class="`, cssClass, `">`, value.replace("&", "&amp;").replace("<", "&lt;"), `</span>`);
+		file.write(`<span class="`, cssClass, `">`, value.replace("&", "&amp;").replace("<", "&lt;"), `</span>`);
 }

@@ -11,11 +11,10 @@ struct Message
 	size_t line;
 	size_t column;
 	string message;
+	bool isError = false;
 }
 
-enum comparitor = q{ a.line < b.line || a.line < b.line };
-
-alias MessageSet = RedBlackTree!(Message, comparitor);
+alias MessageSet = RedBlackTree!(Message, "a.line < b.line");
 
 abstract class BaseAnalyzer : ASTVisitor
 {

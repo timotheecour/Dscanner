@@ -64,20 +64,18 @@ class BackwardsRangeCheck : BaseAnalyzer
 
 	override void visit(const PrimaryExpression primary)
 	{
-		import std.conv;
-		import std.string;
 		if (state == State.ignore || !isNumberLiteral(primary.primary.type))
 			return;
 		if (state == State.left)
 		{
 			line = primary.primary.line;
 			this.column = primary.primary.column;
-			left = to!long(primary.primary.text.removechars("_uUlL"));
+			left = parseNumberLiteral(primary.primary.text);
 			hasLeft = true;
 		}
 		else
 		{
-			right = to!long(primary.primary.text.removechars("_uUlL"));
+			right = parseNumberLiteral(primary.primary.text);
 			hasRight = true;
 		}
 	}
@@ -103,5 +101,18 @@ class BackwardsRangeCheck : BaseAnalyzer
 			hasRight = false;
 		}
 		sliceExpression.accept(this);
+	}
+
+	static size_t parseNumberLiteral(string s)
+	{
+		import std.conv;
+		import std.string;
+		string trimmed = s.removechars("_uUlL");
+		if (s.startsWith("0b"))
+			return parse!(long)(trimmed, 2u);
+		else if (s.startsWith("0x"))
+			return parse!(long)(trimmed, 16u);
+		else
+			return to!long(trimmed);
 	}
 }

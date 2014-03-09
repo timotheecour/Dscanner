@@ -14,10 +14,9 @@ import std.stdio;
 import std.array;
 import std.conv;
 
-void doNothing(string, size_t, size_t, string, bool) {}
-
 void printCtags(File output, string[] fileNames)
 {
+	void doNothing(string, size_t, size_t, string, bool) {}
 	string[] tags;
 	LexerConfig config;
 	shared(StringCache)* cache = new shared StringCache(StringCache.defaultBucketCount);

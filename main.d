@@ -41,6 +41,7 @@ int main(string[] args)
 	bool outline;
 	bool tokenDump;
 	bool styleCheck;
+	bool report;
 
 	try
 	{
@@ -48,7 +49,7 @@ int main(string[] args)
 			"ctags|c", &ctags, "recursive|r|R", &recursive, "help|h", &help,
 			"tokenCount|t", &tokenCount, "syntaxCheck|s", &syntaxCheck,
 			"ast|xml", &ast, "imports|i", &imports, "outline|o", &outline,
-			"tokenDump", &tokenDump, "styleCheck", &styleCheck,
+			"tokenDump", &tokenDump, "styleCheck", &styleCheck, "report", &report,
 			"muffinButton", &muffin);
 	}
 	catch (ConvException e)
@@ -79,7 +80,7 @@ int main(string[] args)
 	}
 
 	auto optionCount = count!"a"([sloc, highlight, ctags, tokenCount,
-		syntaxCheck, ast, imports, outline, tokenDump, styleCheck]);
+		syntaxCheck, ast, imports, outline, tokenDump, styleCheck, report]);
 	if (optionCount > 1)
 	{
 		stderr.writeln("Too many options specified");
@@ -93,7 +94,13 @@ int main(string[] args)
 
 	shared(StringCache)* cache = new shared StringCache(StringCache.defaultBucketCount);
 
-	if (tokenDump || highlight)
+	if (report)
+	{
+		string[] files = expandArgs(args, recursive);
+		writeReport(files, cache);
+		return 0;
+	}
+	else if (tokenDump || highlight)
 	{
 		bool usingStdin = args.length == 1;
 		ubyte[] bytes = usingStdin ? readStdin() : readFile(args[1]);
@@ -124,11 +131,11 @@ int main(string[] args)
 	}
 	else if (styleCheck)
 	{
-		stdout.analyze(expandArgs(args, recursive));
+		stdout.styleCheck(expandArgs(args, recursive), cache);
 	}
 	else if (syntaxCheck)
 	{
-		stdout.syntaxCheck(expandArgs(args, recursive));
+		stdout.syntaxCheck(expandArgs(args, recursive), cache);
 	}
 	else
 	{

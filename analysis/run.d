@@ -1,3 +1,9 @@
+//          Copyright Brian Schott 2014.
+// Distributed under the Boost Software License, Version 1.0.
+//    (See accompanying file LICENSE_1_0.txt or copy at
+//          http://www.boost.org/LICENSE_1_0.txt)
+
+
 module analysis.run;
 
 import std.stdio;
@@ -20,24 +26,53 @@ import analysis.fish;
 import analysis.numbers;
 import analysis.objectconst;
 import analysis.range;
+import analysis.output;
 
-void messageFunction(string fileName, size_t line, size_t column, string message,
-	bool isError)
+void syntaxCheck(File output, string[] fileNames, shared(StringCache)* cache)
 {
-	writefln("%s(%d:%d)[%s]: %s", fileName, line, column,
-		isError ? "error" : "warn", message);
+	writeMessages(output, analyze(fileNames, cache, false));
 }
 
-void syntaxCheck(File output, string[] fileNames)
+void styleCheck(File output, string[] fileNames, shared(StringCache)* cache)
 {
-	analyze(output, fileNames, false);
+	writeMessages(output, analyze(fileNames, cache, true));
 }
 
-void analyze(File output, string[] fileNames, bool staticAnalyze = true)
+void writeMessages(File output, MessageSet[string] messages)
+{
+	foreach (k, v; messages)
+	{
+		foreach (message; v[])
+		{
+			output.writefln("%s(%d:%d)[%s]: %s", message.fileName, message.line,
+				message.column, message.isError ? "error" : "warn ",
+				message.message);
+		}
+	}
+}
+
+void writeReport(string[] fileNames, shared(StringCache)* cache)
+{
+	File reportFile = File("dscanner-analysis.html", "w");
+	MessageSet[string] messages = analyze(fileNames, cache, true);
+	writeHtmlReport(reportFile, messages, cache);
+}
+
+MessageSet[string] analyze(string[] fileNames, shared(StringCache)* cache,
+	bool staticAnalyze)
 {
 	import std.parallelism;
+	MessageSet[string] rVal;
 	foreach (fileName; fileNames)
 	{
+		MessageSet set = new MessageSet;
+
+		void messageFunction(string fileName, size_t line, size_t column,
+			string message, bool isError)
+		{
+			set.insert(Message(fileName, line, column, message, isError));
+		}
+
 		File f = File(fileName);
 		auto bytes = uninitializedArray!(ubyte[])(to!size_t(f.size));
 		f.rawRead(bytes);
@@ -58,9 +93,6 @@ void analyze(File output, string[] fileNames, bool staticAnalyze = true)
 		ParseAllocator p = new ParseAllocator;
 		Module m = parseModule(app.data, fileName, p, &messageFunction);
 
-		if (!staticAnalyze)
-			return;
-
 		BaseAnalyzer[] checks;
 		checks ~= new StyleChecker(fileName);
 		checks ~= new EnumArrayLiteralCheck(fileName);
@@ -76,14 +108,13 @@ void analyze(File output, string[] fileNames, bool staticAnalyze = true)
 			check.visit(m);
 		}
 
-		MessageSet set = new MessageSet;
 		foreach(check; checks)
 			foreach (message; check.messages)
 				set.insert(message);
-		foreach (message; set[])
-			writefln("%s(%d:%d)[warn]: %s", message.fileName, message.line,
-				message.column, message.message);
+
+		rVal[fileName] = set;
 		p.deallocateAll();
 	}
+	return rVal;
 }
 
