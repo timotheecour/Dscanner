@@ -16,16 +16,21 @@ void writeWhitespace(File file, string text, ref uint line, MessageSet messages,
 			continue;
 		else if (c == '\n')
 		{
+			bool contained;
 			if (spans.containsLine(line))
+			{
 				file.write("\n");
+				contained = true;
+			}
 			foreach (message; messages[].filter!(a => a.line == line))
 				writeMessage(file, message);
 			line++;
 			if (spans.containsLine(line))
-			{
 				file.writef("<span class=\"ln\">%d</span>", line);
-				if (!spans.containsLine(line + 1))
-					file.writeln("<div class=\"separator\"/></div>");
+			else if (contained && messages[].canFind!(a => a.line > line))
+			{
+				file.writeln("<div class=\"separator\"/></div>");
+				return;
 			}
 		}
 		else if (spans.containsLine(line))
@@ -56,6 +61,8 @@ void writeStrOrCom(File file, string text, string cssClass, ref uint line,
 			writing = spans.containsLine(line);
 			if (writing)
 				file.writef("</span><span class=\"ln\">%d</span><span class=\"%s\">", line, cssClass);
+			else
+				file.write("</span>");
 		}
 		else if (writing)
 		{

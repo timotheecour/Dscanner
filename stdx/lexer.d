@@ -423,6 +423,7 @@ mixin template Lexer(Token, alias defaultTokenFunction,
         import std.conv;
         import std.string;
         import std.range;
+		import std.algorithm;
 
         string[] pseudoTokens = stupidToArray(tokenHandlers.stride(2));
         string[] allTokens = stupidToArray(sort(staticTokens ~ possibleDefaultTokens ~ pseudoTokens).uniq);
@@ -443,6 +444,7 @@ mixin template Lexer(Token, alias defaultTokenFunction,
 
     private static string printCase(string[] tokens, string[] pseudoTokens)
     {
+		import std.algorithm;
         string[] t = tokens;
         string[] sortedTokens = stupidToArray(sort!"a.length > b.length"(t));
         import std.conv;
