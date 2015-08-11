@@ -27,15 +27,25 @@ void printCtags(File output, string[] fileNames)
 	string[] tags;
 	LexerConfig config;
 	StringCache cache = StringCache(StringCache.defaultBucketCount);
-	foreach (fileName; fileNames)
+	foreach (i, fileName; fileNames)
 	{
 		File f = File(fileName);
 		if (f.size == 0)
 			continue;
 		auto bytes = uninitializedArray!(ubyte[])(to!size_t(f.size));
+		writeln(i," ",fileName);
+		if(!bytes.length)
+			continue;//TEMP
 		f.rawRead(bytes);
 		auto tokens = getTokensForParser(bytes, config, &cache);
-		Module m = parseModule(tokens.array, fileName, null, &doNothing);
+		//Module m = parseModule(tokens.array, fileName, null, &doNothing);
+		Module m;
+		try{
+		        m = parseModule(tokens.array(), fileName, null, &handleError);
+		}
+		catch(Throwable e){
+		        continue;
+		}
 
 		auto printer = new CTagsPrinter;
 		printer.fileName = fileName;
@@ -64,6 +74,12 @@ alias ContextType = Tuple!(string, "c", string, "access");
 
 void doNothing(string, size_t, size_t, string, bool)
 {
+}
+
+void handleError(string file , int line, int column, string msg) {
+       writeln(file,":",line,":",column," ",msg);//TODO:LINE_
+       import std.exception;
+       enforce(0,"parsing error");
 }
 
 string paramsToString(Dec)(const Dec dec)
