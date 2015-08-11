@@ -76,7 +76,7 @@ void doNothing(string, size_t, size_t, string, bool)
 {
 }
 
-void handleError(string file , int line, int column, string msg) {
+void handleError(string file , size_t line, size_t column, string msg, bool is_error) {
        writeln(file,":",line,":",column," ",msg);//TODO:LINE_
        import std.exception;
        enforce(0,"parsing error");
